@@ -2,6 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 
+from decision_layer import compute_decision
+
+
 RAW_CSV = "data/raw/spy_2025_Jul_Dec.csv"
 OUT_DIR = "data/derived"
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -105,3 +108,44 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # Decision layer (trade one window, monitor many)
+    trade_window = 40  # <-- your production spec
+
+    decision = compute_decision(
+        latest_sharpe_snapshot=snap,
+        trade_window=trade_window,
+        warn_sharpe=0.0,
+        stop_sharpe=-0.5,
+        frac_warn=0.5,
+        frac_stop=0.75,
+    )
+
+    decision_path = f"{OUT_DIR}/spy_decision_today.csv"
+    pd.DataFrame(
+        [
+            {
+                "risk_mode": decision["risk_mode"],
+                "position_multiplier": decision["position_multiplier"],
+                "trade_window": decision["trade_window"],
+                "trade_score": decision["trade_score"],
+                "bad_warn_frac": decision["bad_warn_frac"],
+                "bad_stop_frac": decision["bad_stop_frac"],
+            }
+        ]
+    ).to_csv(decision_path, index=False)
+
+    print("saved:", decision_path)
+    print(
+        "decision:",
+        decision["risk_mode"],
+        "| multiplier:",
+        decision["position_multiplier"],
+    )
+    print("trade window score:", round(decision["trade_score"], 2))
+    print(
+        "bad_warn_frac:",
+        round(decision["bad_warn_frac"], 2),
+        "bad_stop_frac:",
+        round(decision["bad_stop_frac"], 2),
+    )
