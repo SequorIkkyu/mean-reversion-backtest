@@ -1,0 +1,2 @@
+risk_mode,position_multiplier,trade_window,frac_below_warn,frac_below_stop
+NORMAL,1.0,40,0.0,0.0
